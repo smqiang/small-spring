@@ -3,6 +3,7 @@ package com.sima.springframework.beans.factory.support;
 import com.sima.springframework.beans.BeanException;
 import com.sima.springframework.beans.factory.ConfigurableListableBeanFactory;
 import com.sima.springframework.beans.factory.config.BeanDefinition;
+import com.sima.springframework.beans.factory.config.BeanPostProcessor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +13,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     @Override
     public BeanDefinition getBeanDefinition(String beanName) throws BeanException {
         return beanDefinitionMap.get(beanName);
+    }
+
+    @Override
+    public void preInstantiateSingletons() throws BeanException {
+        beanDefinitionMap.keySet().forEach(this::getBean);
     }
 
     @Override

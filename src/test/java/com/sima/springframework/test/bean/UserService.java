@@ -5,10 +5,12 @@ package com.sima.springframework.test.bean;
  */
 public class UserService {
     private String userId;
+    private String company;
+    private String location;
     private UserDao userDao;
 
     public void sayHello(){
-        System.out.println("hello, " + userDao.queryUserName(userId));
+        System.out.println("hello, " + userDao.queryUserName(userId) + " from " + getCompany() + " in " +getLocation() );
     }
 
     public String getUserId() {
@@ -25,5 +27,21 @@ public class UserService {
 
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 }

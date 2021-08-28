@@ -3,12 +3,14 @@ package com.sima.springframework.beans.factory.support;
 import cn.hutool.core.bean.BeanUtil;
 import com.sima.springframework.beans.BeanException;
 import com.sima.springframework.beans.PropertyValue;
+import com.sima.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import com.sima.springframework.beans.factory.config.BeanDefinition;
+import com.sima.springframework.beans.factory.config.BeanPostProcessor;
 import com.sima.springframework.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
 
-public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory {
+public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
     private InstantiationStrategy instantiationStrategy = new CglibSubclassingInstantiationStrategy();
     
     @Override
@@ -17,6 +19,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         try {
             bean = createBeanInstance(beanDefinition, beanName, args);
             applyPropertyValues(beanName, bean, beanDefinition);
+            bean = initializeBean(beanName, bean, beanDefinition);
             addSingleton(beanName, bean);
         } catch (InstantiationException | IllegalAccessException e) {
             throw new BeanException(e.toString());
@@ -60,5 +63,43 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     public void setInstantiationStrategy(InstantiationStrategy instantiationStrategy) {
         this.instantiationStrategy = instantiationStrategy;
+    }
+
+    private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition){
+        Object wrappedBean = applyBeanPostProcessorBeforeInitialization(bean, beanName);
+        invokeInitMethods(beanName, wrappedBean, beanDefinition);
+        wrappedBean = applyBeanPostProcessorAfterInitialization(wrappedBean, beanName);
+        return wrappedBean;
+    }
+
+    // TODO
+    private void invokeInitMethods(String beanName, Object bean, BeanDefinition definition){
+
+    }
+
+    @Override
+    public Object applyBeanPostProcessorBeforeInitialization(Object bean, String beanName) throws BeanException {
+        Object result = bean;
+        for (BeanPostProcessor processor : getBeanPostProcessors()){
+            Object wrapped = processor.postProcessBeforeInitialization(result, beanName);
+            if (wrapped == null){
+                return result;
+            }
+            result = wrapped;
+        }
+        return result;
+    }
+
+    @Override
+    public Object applyBeanPostProcessorAfterInitialization(Object bean, String beanName) throws BeanException {
+        Object result = bean;
+        for (BeanPostProcessor processor : getBeanPostProcessors()){
+            Object wrapped = processor.postProcessAfterInitialization(result, beanName);
+            if (wrapped == null){
+                return result;
+            }
+            result = wrapped;
+        }
+        return result;
     }
 }
