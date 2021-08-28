@@ -7,6 +7,7 @@ import com.sima.springframework.beans.factory.BeanFactory;
 import com.sima.springframework.beans.factory.config.BeanReference;
 import com.sima.springframework.beans.factory.support.DefaultListableBeanFactory;
 import com.sima.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import com.sima.springframework.context.support.ClassPathXmlApplicationContext;
 import com.sima.springframework.test.bean.UserDao;
 import com.sima.springframework.test.bean.UserService;
 import org.junit.Test;
@@ -39,6 +40,13 @@ public class ApiTest {
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
         reader.loadBeanDefinitions("classpath:spring.xml");
         UserService userService = (UserService) beanFactory.getBean("userService");
+        userService.sayHello();
+    }
+
+    @Test
+    public void test_PostProcessor() {
+        ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:springPostProcessor.xml");
+        UserService userService = (UserService) ctx.getBean("userService");
         userService.sayHello();
     }
 }
