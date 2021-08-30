@@ -6,7 +6,8 @@ import java.util.Map;
 public class UserDao {
     private static Map<String, String> map = new HashMap<>();
 
-    static{
+    public void initDataMethod() {
+        System.out.println("calling initDataMethod()");
         map.put("001", "zz");
         map.put("002", "cici");
         map.put("003", "bb");
@@ -14,5 +15,10 @@ public class UserDao {
 
     public String queryUserName(String uid){
         return map.get(uid);
+    }
+
+    public void destroyDataMethod() {
+        System.out.println("calling destroyDataMethod()");
+        map.clear();
     }
 }

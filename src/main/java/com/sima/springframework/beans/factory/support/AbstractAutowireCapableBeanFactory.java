@@ -1,14 +1,18 @@
 package com.sima.springframework.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.sima.springframework.beans.BeanException;
 import com.sima.springframework.beans.PropertyValue;
+import com.sima.springframework.beans.factory.DisposableBean;
+import com.sima.springframework.beans.factory.InitializingBean;
 import com.sima.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import com.sima.springframework.beans.factory.config.BeanDefinition;
 import com.sima.springframework.beans.factory.config.BeanPostProcessor;
 import com.sima.springframework.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
     private InstantiationStrategy instantiationStrategy = new CglibSubclassingInstantiationStrategy();
@@ -20,12 +24,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             bean = createBeanInstance(beanDefinition, beanName, args);
             applyPropertyValues(beanName, bean, beanDefinition);
             bean = initializeBean(beanName, bean, beanDefinition);
+            registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
             addSingleton(beanName, bean);
         } catch (InstantiationException | IllegalAccessException e) {
             throw new BeanException(e.toString());
         }
 
         return bean;
+    }
+
+    private void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition){
+        if (bean instanceof DisposableBean || StrUtil.isNotEmpty(beanDefinition.getDestroyMethodName())){
+            registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, beanDefinition));
+        }
     }
     
     protected Object createBeanInstance(BeanDefinition beanDefinition, String beanName, Object[] args) throws InstantiationException, IllegalAccessException {
@@ -67,14 +78,28 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition){
         Object wrappedBean = applyBeanPostProcessorBeforeInitialization(bean, beanName);
-        invokeInitMethods(beanName, wrappedBean, beanDefinition);
+        try {
+            invokeInitMethods(beanName, wrappedBean, beanDefinition);
+        } catch (Exception e) {
+            throw new BeanException("Invacation of init method of bean [" + beanName + "] failed.", e);
+        }
         wrappedBean = applyBeanPostProcessorAfterInitialization(wrappedBean, beanName);
         return wrappedBean;
     }
 
-    // TODO
-    private void invokeInitMethods(String beanName, Object bean, BeanDefinition definition){
+    private void invokeInitMethods(String beanName, Object bean, BeanDefinition definition) throws Exception {
+        if (bean instanceof InitializingBean){
+            ((InitializingBean) bean).afterPropertiesSet();
+        }
 
+        String initMethodName = definition.getInitMethodName();
+        if (StrUtil.isNotEmpty(initMethodName)){
+            Method initMethod = bean.getClass().getMethod(initMethodName);
+            if (null == initMethod){
+                throw new BeanException("Can't find a init method named '" + initMethodName + "' on bean [" + beanName + "]");
+            }
+            initMethod.invoke(bean);
+        }
     }
 
     @Override

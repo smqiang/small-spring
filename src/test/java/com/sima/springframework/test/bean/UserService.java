@@ -1,9 +1,12 @@
 package com.sima.springframework.test.bean;
 
+import com.sima.springframework.beans.factory.DisposableBean;
+import com.sima.springframework.beans.factory.InitializingBean;
+
 /**
  * Created by qisima on 8/23/2021 10:44 PM
  */
-public class UserService {
+public class UserService implements InitializingBean, DisposableBean {
     private String userId;
     private String company;
     private String location;
@@ -43,5 +46,15 @@ public class UserService {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("calling destroy()");
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("calling afterPropertiesSet()");
     }
 }
