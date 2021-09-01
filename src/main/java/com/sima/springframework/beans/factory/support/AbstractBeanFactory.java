@@ -5,11 +5,13 @@ import com.sima.springframework.beans.factory.BeanFactory;
 import com.sima.springframework.beans.factory.config.BeanDefinition;
 import com.sima.springframework.beans.factory.config.BeanPostProcessor;
 import com.sima.springframework.beans.factory.config.ConfigurableBeanFactory;
+import com.sima.springframework.util.ClassUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
+    private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
     @Override
     public Object getBean(String beanName) throws BeanException {
@@ -33,6 +35,10 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 
     public List<BeanPostProcessor> getBeanPostProcessors() {
         return beanPostProcessors;
+    }
+
+    public ClassLoader getBeanClassLoader() {
+        return beanClassLoader;
     }
 
     @Override
