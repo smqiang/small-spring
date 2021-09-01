@@ -51,4 +51,14 @@ public class ApiTest {
         UserService userService = (UserService) ctx.getBean("userService");
         userService.sayHello();
     }
+
+    @Test
+    public void test_aware() {
+        ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:springPostProcessor.xml");
+        ctx.registerShutdownHook();
+
+        UserService userService = (UserService) ctx.getBean("userService");
+        userService.sayHello();
+        System.out.println(userService.getApplicationContext());
+    }
 }
