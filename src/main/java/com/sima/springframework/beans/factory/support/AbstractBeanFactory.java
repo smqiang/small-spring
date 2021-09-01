@@ -2,6 +2,7 @@ package com.sima.springframework.beans.factory.support;
 
 import com.sima.springframework.beans.BeanException;
 import com.sima.springframework.beans.factory.BeanFactory;
+import com.sima.springframework.beans.factory.FactoryBean;
 import com.sima.springframework.beans.factory.config.BeanDefinition;
 import com.sima.springframework.beans.factory.config.BeanPostProcessor;
 import com.sima.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -10,7 +11,7 @@ import com.sima.springframework.util.ClassUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
+public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {
     private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
     @Override
@@ -23,14 +24,28 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return doGetBean(beanName, args);
     }
 
-    private <T> T doGetBean(final String beanName, final Object[] args){
+    protected <T> T doGetBean(final String beanName, final Object[] args){
         Object bean = getSingleton(beanName);
         if (bean != null){
-            return (T) bean;
+            return (T) getObjectForBeanInstance(bean, beanName);
         }
 
         BeanDefinition beanDefinition = getBeanDefinition(beanName);
-        return (T) createBean(beanName, beanDefinition, args);
+        bean = createBean(beanName, beanDefinition, args);
+        return (T) getObjectForBeanInstance(bean, beanName);
+    }
+
+    private Object getObjectForBeanInstance(Object bean, String beanName) {
+        if (! (bean instanceof FactoryBean)){
+            return bean;
+        }
+
+        Object object = getCachedObjectForFactoryBean(beanName);
+        if (null == object) {
+            object = getObjectFromFactoryBean((FactoryBean) bean, beanName);
+        }
+
+        return object;
     }
 
     public List<BeanPostProcessor> getBeanPostProcessors() {
